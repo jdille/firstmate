@@ -73,7 +73,8 @@ state/.wake-queue       durable queued wakes, retained until post-handling ackno
 ```
 
 Every other `state/` entry is machinery: watcher, wake, away-mode, turn-end, PR-poll, Relay, process-event, and per-harness session records, each owned by the script that writes it.
-Never hand-edit, delete, or repair one; drive it through its owning script.
+Never hand-edit, repair, or invent one, and remove one only where its owning script or skill directs that removal.
+Two carry a standing safe-to-delete affordance: `state/.watch-triage.log` is the watcher's absorbed-wake debug log and is never relied on, and deleting `state/.<id>.open-decisions-cursor` only forces one full re-fold.
 
 A `state/<id>.status` line is a wake event, not current-state truth; `bin/fm-crew-state.sh` owns current-state reconciliation.
 `data/captain.md`, `data/captain-shared.md`, and `data/learnings.md` stay canonical even when harness memory mirrors them; `docs/configuration.md` owns their curation contract.
