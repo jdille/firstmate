@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 # Bind an intentional custom watcher check to its current bytes.
+#
+# This script owns the file requirements a custom check must meet, because the
+# watcher never executes an unregistered one. state/<id>.check.sh must be a
+# regular, non-symlinked, single-hardlink file with mode 0700, on the same
+# filesystem as the state directory, which itself must not be a symlink; the
+# state/<id>.check-trust record written here binds that file's exact bytes, so
+# every later edit needs another registration. The watcher runs a private
+# validated snapshot of a registered check and rejects a missing, mutated, or
+# unregistered one without executing it.
+# AGENTS.md section 7 owns the behavioral half of the contract: print one line
+# only when firstmate should wake, print nothing otherwise, and finish before
+# FM_CHECK_TIMEOUT.
 # Usage: fm-check-register.sh <id>
 set -u
 
