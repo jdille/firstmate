@@ -42,6 +42,20 @@ Use `--threads` only when Jack scoped the round to specific threads; default is 
 Use `--dry-run` to inspect the brief and spawn command without dispatching.
 After a round reports done, verify its closing writes actually landed - the R-block in `rounds.md` and the atelier commit - before recording the round complete; a round without them is not done.
 
+## Everything else Jack asks for: at-task, never inline
+
+Any substantive ask that is not a comment round - "build the empty state", "try two layouts", "figure out why the chart clips", a persona QA pass, a Paper snapshot - goes to a crewmate in its own tmux window and worktree:
+
+```
+/Users/jackdille/Desktop/code/atelier/bin/at-task.sh <slug> --ship --ask "<the ask, in full>"
+/Users/jackdille/Desktop/code/atelier/bin/at-task.sh <slug> --scout --ask "<the question>"
+```
+
+`--ship` delivers changes under the identity's delivery mode; `--scout` delivers a report only (scratch worktree, no branch, no PR).
+The ask text governs the worker; the context pack rides along as context.
+You never edit project code, never build, and never investigate inside your own session - "it's a small fix" is what fix rounds and ship tasks are for.
+Run several at-task workers in parallel when the work splits; each gets its own worktree, and only true semantic dependency serializes.
+
 ## Decision answers: one answer, two durable records
 
 Workers never decide scope, taste, or product calls; those arrive as `needs-decision: [key=...]` status lines mirrored into `inbox/decisions.md`.
