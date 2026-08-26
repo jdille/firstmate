@@ -36,7 +36,7 @@ The session ends through `bin/at-session-close.sh`, never by just stopping.
 Before the session ends - Jack says to wrap up, or you see it winding down - run:
 
 ```
-/Users/jackdille/Desktop/code/atelier/bin/at-session-close.sh <slug> \
+/Users/jackdille/code/atelier/bin/at-session-close.sh <slug> \
   --round-summary "<what happened, plainly>" \
   --decision "<one settled decision>" \
   --decision "<another>" \

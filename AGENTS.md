@@ -52,7 +52,7 @@ Each secondmate has a persistent isolated `FM_HOME`, including its own state, ba
 `bin/fm-send.sh` fails closed unless `FM_HOME` is explicit, so a steer cannot silently resolve against another home.
 
 Tracked files hold shared instructions and tooling; `data/` holds durable private fleet records; `state/` holds runtime records and append-only status events; `config/` holds local operating choices; and `projects/` contains clones that are read-only to firstmate except under hard rule 1's concrete captain-approved project operation exception.
-The atelier repo at `/Users/jackdille/Desktop/code/atelier` is writable design-harness state rather than a project clone, so crewmates briefed on atelier design rounds may write and commit there exactly as their brief directs.
+The atelier repo at `/Users/jackdille/code/atelier` is writable design-harness state rather than a project clone, so crewmates briefed on atelier design rounds may write and commit there exactly as their brief directs.
 
 ```
 AGENTS.md            this file (CLAUDE.md is a real @AGENTS.md pointer to it)

@@ -8,7 +8,7 @@ metadata:
 
 # design-head
 
-The atelier repo at `/Users/jackdille/Desktop/code/atelier` is this home's durable design state and the `at-*` scripts in its `bin/` are the levers.
+The atelier repo at `/Users/jackdille/code/atelier` is this home's durable design state and the `at-*` scripts in its `bin/` are the levers.
 That repo is writable harness state, not a `projects/` clone, so hard rule 1 does not apply to it; its own AGENTS.md owns the write rules (append-only ledgers, single writer on `feedback/`, protected `jack-notes.md`).
 Read each script's `--help` before first use; headers are the contract.
 
@@ -33,7 +33,7 @@ The registered check prints one line naming projects with new threads, e.g. `des
 "Go get them" bypasses the poll cadence - dispatch immediately for every project with queued threads.
 
 ```
-/Users/jackdille/Desktop/code/atelier/bin/at-dispatch.sh <slug> [--threads id1,id2,...]
+/Users/jackdille/code/atelier/bin/at-dispatch.sh <slug> [--threads id1,id2,...]
 ```
 
 It computes the next round number from `rounds.md`, scaffolds the brief with this home's `fm-brief.sh`, splices in the deterministic context pack (`at-pack.sh`: full decisions ledger, in-scope queue entries, last 3 rounds, identity, standing bounds), and spawns via `fm-spawn.sh` with the identity's delivery mode.
@@ -47,8 +47,8 @@ After a round reports done, verify its closing writes actually landed - the R-bl
 Any substantive ask that is not a comment round - "build the empty state", "try two layouts", "figure out why the chart clips", a persona QA pass, a Paper snapshot - goes to a crewmate in its own tmux window and worktree:
 
 ```
-/Users/jackdille/Desktop/code/atelier/bin/at-task.sh <slug> --ship --ask "<the ask, in full>"
-/Users/jackdille/Desktop/code/atelier/bin/at-task.sh <slug> --scout --ask "<the question>"
+/Users/jackdille/code/atelier/bin/at-task.sh <slug> --ship --ask "<the ask, in full>"
+/Users/jackdille/code/atelier/bin/at-task.sh <slug> --scout --ask "<the question>"
 ```
 
 `--ship` delivers changes under the identity's delivery mode; `--scout` delivers a report only (scratch worktree, no branch, no PR).
@@ -73,7 +73,7 @@ A decision that conflicts with an existing D-number supersedes it only if Jack s
 When Jack wants to work a project live rather than through rounds:
 
 ```
-/Users/jackdille/Desktop/code/atelier/bin/at-attach.sh <slug>
+/Users/jackdille/code/atelier/bin/at-attach.sh <slug>
 ```
 
 It prints (and copies) the command that opens claude in the project worktree with the context pack as the opening prompt and the session-close contract on top.
