@@ -167,6 +167,8 @@ fm_primary_scope_matches "$FM_ROOT" "$STATE" || exit 0
 # --- the actual predicate ----------------------------------------------------
 # shellcheck source=bin/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
+# shellcheck source=bin/fm-session-lock-lib.sh
+. "$SCRIPT_DIR/fm-session-lock-lib.sh"
 
 BUDGET_FILE="$STATE/.turnend-claude-blocks"
 BUDGET_LOCK="$STATE/.turnend-claude-blocks.lock"
@@ -245,6 +247,34 @@ block_stop() {
   } >&2
   exit 2
 }
+
+# A session that was refused this home's session lock is read-only by
+# contract (AGENTS.md section 3): it may not drain, arm, spawn, steer, or
+# repair supervision. Blocking it demands an action it is forbidden to take,
+# and neither bounded exit below can reach it - the Stop-owned auto-arm
+# defers to the lock-owning session, so no failure episode is ever verified,
+# and the block budget then re-blocks without limit. Repair belongs to the
+# session that holds the lock, so step aside here and say so once. Only a
+# lock naming a LIVE harness process outside this session's own ancestry
+# qualifies; a missing, malformed, dead, or self-owned lock changes nothing,
+# and fm_session_lock_owned_by_self fails closed on unresolved ancestry.
+lock_held_by_other_live_session() {
+  local lock_pid
+  lock_pid=$(sed -n '1p' "$STATE/.lock" 2>/dev/null || true)
+  case "$lock_pid" in
+    ''|*[!0-9]*) return 1 ;;
+  esac
+  fm_harness_pid_alive "$lock_pid" || return 1
+  fm_session_lock_owned_by_self "$STATE" && return 1
+  FM_LOCK_OTHER_PID=$lock_pid
+  return 0
+}
+FM_LOCK_OTHER_PID=
+if lock_held_by_other_live_session; then
+  [ "$CLAUDE_MODE" -eq 1 ] || exit 0
+  printf '{"systemMessage":"FIRSTMATE SUPERVISION IS DOWN, but this session does not hold the home lock (held by live session pid %s), so it is read-only and must not repair supervision. Repair belongs to the lock-holding session; report this to the captain once and do not retry from here."}\n' "$FM_LOCK_OTHER_PID"
+  exit 0
+fi
 
 if [ "$CLAUDE_MODE" -eq 0 ]; then
   block_stop
