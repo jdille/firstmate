@@ -232,6 +232,7 @@ HEARTBEAT_MAX=${FM_HEARTBEAT_MAX:-7200}  # heartbeat backoff cap
 CHECK_INTERVAL=${FM_CHECK_INTERVAL:-300}  # seconds between *.check.sh sweeps
 CHECK_TIMEOUT=${FM_CHECK_TIMEOUT:-30}     # seconds allowed per *.check.sh
 HOME_SUMMARY_INTERVAL=${FM_HOME_SUMMARY_INTERVAL:-300}
+LAVISH_BOARD_INTERVAL=${FM_LAVISH_BOARD_INTERVAL:-60}  # seconds between board-attendance scans
 case "$HOME_SUMMARY_INTERVAL" in
   ''|*[!0-9]*|0) HOME_SUMMARY_INTERVAL=300 ;;
 esac
@@ -2357,6 +2358,29 @@ while :; do
     fi
   else
     triage_log "inactive-outcome reconciliation unavailable"
+  fi
+
+  # A crew-hosted Lavish board with no listener is invisible to every other
+  # signal here: the captain's comments queue on the server, nothing errors,
+  # and no status line is ever written. bin/fm-lavish-board-guard.sh owns the
+  # whole detection contract, including its grace period and its once-per-board
+  # deduplication, and never touches a board. It is silent on a home with no
+  # board URL in any status log, so quiet fleets pay nothing.
+  # Its own cadence, like the home-summary refresh above: a home with a live
+  # board pays one session listing and one process-table read per interval
+  # rather than per 15-second cycle, and the grace period is wall-clock from
+  # the first observation, so a slower cadence cannot delay the report.
+  if [ "$(age_of "$STATE/.lavish-board-scan")" -ge "$LAVISH_BOARD_INTERVAL" ]; then
+    touch "$STATE/.lavish-board-scan"
+    lavish_board_out=
+    if lavish_board_out=$(FM_HOME="$FM_HOME" FM_STATE_OVERRIDE="$STATE" \
+      "$SCRIPT_DIR/fm-lavish-board-guard.sh" scan 2>/dev/null); then
+      if [ -n "$lavish_board_out" ]; then
+        wake "check: lavish-board-unattended"
+      fi
+    else
+      triage_log "lavish board attendance scan unavailable"
+    fi
   fi
 
   # Slow per-task checks (firstmate writes these, e.g. a merged-PR poll).

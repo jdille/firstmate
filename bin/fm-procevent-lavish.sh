@@ -12,6 +12,7 @@
 #   fm-procevent-lavish.sh source-id <artifact.html>
 #   fm-procevent-lavish.sh retire <artifact.html>
 #   fm-procevent-lavish.sh poll <artifact.html>
+#   fm-procevent-lavish.sh sessions
 #
 # classify   Print the lifecycle state a handler should act on: feedback, ended,
 #            waiting, disconnected, missing, or unknown.
@@ -43,6 +44,18 @@
 #            record and never announce; any other exit publishes the wake. This
 #            is the generic no-op contract bin/fm-procevent.sh calls, and the
 #            only place Lavish's notion of "nothing was said" is decided.
+#
+# sessions   Print the server's current session inventory as
+#            `<status><TAB><url><TAB><file>` lines, one per session, and nothing
+#            else. It is the read-only resolution from a board URL - the only
+#            handle a status log carries - to the artifact file every other
+#            Lavish command takes. It reads the published listing that bare
+#            `lavish-axi` prints under its `sessions[N]{file,status,url,pending_prompts}`
+#            header (verified against lavish-axi 0.1.68), applies
+#            config/lavish-axi-host exactly like the poll does, and refuses with
+#            a diagnostic when that header's field order is not the one it was
+#            written against, rather than guessing at a changed shape. It never
+#            arms, polls, opens, or ends anything.
 #
 # AN EMPTY BOARD CLOSE IS NOT NEWS, and that is what `silent` exists to say.
 # Closing a review surface that carried nothing is the single most common Lavish
@@ -212,6 +225,60 @@ cmd_arm() {
     -- "$SCRIPT_DIR/fm-procevent-lavish.sh" poll "$real" || exit 1
   printf 'armed: %s\n' "$id"
   printf 'artifact: %s\n' "$real"
+}
+
+# Read-only session inventory. `lavish-axi` with no arguments prints the
+# server's own session table; nothing here opens, resumes, polls, or ends a
+# session, and the artifact path is never touched. Fields are parsed from the
+# RIGHT so an artifact path containing a comma still resolves: the published row
+# is `<file>,<status>,"<url>",<pending_prompts>`.
+cmd_sessions() {
+  local original_host_present=0 original_host="" listing rc=0
+  [ "$#" -eq 0 ] || usage
+  command -v lavish-axi >/dev/null 2>&1 || die "lavish-axi is not installed"
+  if [ "${LAVISH_AXI_HOST+x}" = x ]; then
+    original_host_present=1
+    original_host=$LAVISH_AXI_HOST
+  fi
+  apply_configured_lavish_host "$original_host_present" "$original_host"
+  listing=$(lavish-axi 2>/dev/null) || rc=$?
+  [ "$rc" -eq 0 ] || die "lavish-axi could not list its sessions"
+  printf '%s\n' "$listing" | perl -e '
+    use strict;
+    use warnings;
+    my $expected = "file,status,url,pending_prompts";
+    my ($in_block, $want, $seen) = (0, 0, 0);
+    while (my $line = <STDIN>) {
+      chomp $line;
+      if ($line =~ /^sessions\[(\d+)\](?:\{([^}]*)\})?:\s*$/) {
+        ($in_block, $want, $seen) = (1, $1, 0);
+        if ($want > 0) {
+          my $fields = defined $2 ? $2 : "";
+          die "error: unrecognized lavish-axi session listing fields: $fields\n"
+            unless $fields eq $expected;
+        }
+        next;
+      }
+      next unless $in_block;
+      last unless $line =~ /^\s\s(\S.*)$/;
+      my $row = $1;
+      $row =~ s/\s+$//;
+      # pending_prompts, then the quoted url, then the status, right to left.
+      next unless $row =~ s/,\s*\d+$//;
+      next unless $row =~ s/,\s*"([^"]*)"$//;
+      my $url = $1;
+      next unless $row =~ s/,\s*([^,]*)$//;
+      my $status = $1;
+      my $file = $row;
+      $file =~ s/^"(.*)"$/$1/;
+      next if $file eq "" || $url eq "";
+      $seen++;
+      print join("\t", $status, $url, $file), "\n";
+    }
+    if ($in_block && $seen != $want) {
+      die "error: lavish-axi listed $want sessions but $seen were readable\n";
+    }
+  ' || die "cannot read the lavish-axi session listing"
 }
 
 cmd_retire() {
@@ -740,6 +807,7 @@ case "${1-}" in
   arm)       shift; cmd_arm "$@" ;;
   retire)    shift; cmd_retire "$@" ;;
   poll)      shift; cmd_poll "$@" ;;
+  sessions)  shift; cmd_sessions "$@" ;;
   source-id) shift; cmd_source_id "$@" ;;
   classify)  shift; cmd_classify "$@" ;;
   terminal)  shift; cmd_terminal "$@" ;;

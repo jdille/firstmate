@@ -212,6 +212,36 @@ They fail for opposite reasons, which is the point of keeping them apart.
 The crashed-leader cases separately pin refusal and claim preservation when a leader dies outside the stop's own signal, so successful escalation cannot be mistaken for closing that limit.
 Refresh the regressions with `bash tests/fm-procevent.test.sh`; the dated measurements above are recorded observations, not fixed timing thresholds.
 
+## The published session listing the board guard resolves through
+
+Verified on 2026-09-22 on macOS (Darwin 25.6.0) with `lavish-axi` 0.1.68.
+A status log carries only a board URL, so `bin/fm-lavish-board-guard.sh` needs a URL-to-artifact-file resolution.
+This build publishes one, and `bin/fm-procevent-lavish.sh sessions` reads exactly it:
+
+```sh
+$ lavish-axi | sed -n '/^sessions\[/,/^visual_guidance/p' | head -3
+sessions[3]{file,status,url,pending_prompts}:
+  /Users/.../page.html,open,"http://127.0.0.1:4387/session/24d3974cafa3912a",0
+  /Users/.../wallets-board.html,open,"http://127.0.0.1:4387/session/883167476396edb4",0
+$ bin/fm-procevent-lavish.sh sessions | head -1
+open	http://127.0.0.1:4387/session/24d3974cafa3912a	/Users/.../page.html
+```
+
+There is still no dedicated `sessions` subcommand: `lavish-axi sessions` exits 2 with `VALIDATION_ERROR`, the same positive proof of absence recorded above, so the bare listing is the published surface.
+The field header is asserted rather than assumed, and a changed field order is refused with a diagnostic instead of parsed into a wrong file.
+
+Attendance is read from the process table, not from a registration, because a crew-hosted board's listener is the worker's own foreground poll and is registered nowhere.
+Both listener shapes were observed live on the same date:
+
+```sh
+$ ps -eww -o args= | grep lavish | grep poll
+bash .../bin/fm-procevent-lavish.sh poll /Users/.../wallets-board.html
+node /Users/.../.local/bin/lavish-axi poll /Users/.../wallets-board.html
+```
+
+[`tests/fm-lavish-board-guard-live-e2e.test.sh`](../../tests/fm-lavish-board-guard-live-e2e.test.sh) is the command that refreshes this evidence; it opens its own scratch session, asserts both surfaces against the installed build, and ends that session again.
+[`tests/fm-lavish-board-guard.test.sh`](../../tests/fm-lavish-board-guard.test.sh) pins the guard's own logic in CI with real processes and no Lavish server.
+
 ## Portability finding
 
 `setsid` is **not present on macOS**, so it cannot establish the runner's process group.
