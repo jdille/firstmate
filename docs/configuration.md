@@ -908,7 +908,14 @@ It concludes only a round that is still open, so a repeated acknowledgement of a
 A second armer is refused with the current owner named, and the source list derives `listening`, `round-open`, or `dead` from the claim and handled captures without a second ownership record.
 If the hosting worker cannot be recovered, relaunch a worker to re-host first; guarded firstmate adoption is an explicit last resort only after the old claim is proved dead.
 The cross-home gap between worker rounds remains an accepted residual until lavish-axi's exclusive listener lands.
-The interim crew instruction emitted by `bin/fm-brief.sh` points workers at this arm-and-acknowledge contract.
+The interim crew instruction emitted by `bin/fm-brief.sh` points workers at this arm-and-acknowledge contract, and requires that arm before any status line naming the board.
+
+That instruction is not enforcement, and a board that is never armed at all is the one shape this contract cannot see.
+Nothing polls it, no registration exists to reconcile, the browser tells the captain "Your agent is not listening", and every comment queues on the server while no status line, error, or wake is ever produced.
+`bin/fm-lavish-board-guard.sh` is the watcher-side backstop for exactly that case, and its header owns the complete contract, including its gates, its grace period, the `FM_LAVISH_BOARD_GRACE_SECS` bound, and its per-board deduplication record.
+It reports only a board that an open session still holds, that a live task's status log still names, and that this home holds no registered task-owned source for.
+An armed board is attended in every state the source list reports - `listening`, `round-open`, and `dead` alike - because the runner's own reconcile and the owner's steering inbox already own those.
+It publishes one ordinary durable `check` wake per unarmed board and never arms, polls, opens, or ends one: firstmate answers that wake by steering the hosting worker to arm its board.
 
 The `when` adapter (`bin/fm-procevent-when.sh`) turns this channel into a condition->action primitive: it registers a deterministic condition and a deterministic action once, its blocking child polls the condition without waking firstmate, and a stable true fires the action at most once before one terminal outcome is durably captured and published as a wake that remains eligible for re-announcement until handled.
 The (condition, action) spec is stored privately under `state/when/` and hash-bound by a trust record the same way `bin/fm-check-register.sh` binds a custom check, while the spec separately binds the resolved action executable's bytes; a mutated or unregistered spec or a changed action executable is refused before the action runs, and that binding is reloaded from disk immediately before each fire rather than trusted from when polling started.
