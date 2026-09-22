@@ -1,0 +1,35 @@
+== status log of task 'wallets' (board URL is NOT the last line) ==
+  working: building the wallets board
+  needs-decision [key=board-review]: review the board at http://127.0.0.1:4387/session/883167476396edb4
+  working: waiting on the captain, tidying copy meanwhile
+
+== scan 1: board just observed unarmed -> inside grace, silent, record opened ==
+  (exit 0)
+  wake queue:
+    <empty>
+  episode records: 1
+
+== fast-forward the episode record 90s (grace is 60s) ==
+== scan 2: past grace -> ONE actionable line, ONE queued check wake ==
+actionable: lavish board unarmed: task=wallets url=http://127.0.0.1:4387/session/883167476396edb4 file=/tmp/lavish-demo.ZxYHAX/boards/wallets-board.html unarmed_for=90s
+  (exit 0)
+  wake queue:
+    1790112996	1	check	lavish-board-unarmed:wallets:c701e3c4be4b30602e46a99c58377e09	lavish board unarmed: task=wallets url=http://127.0.0.1:4387/session/883167476396edb4 file=/tmp/lavish-demo.ZxYHAX/boards/wallets-board.html unarmed_for=90s
+  episode records: 1
+
+== scan 3: still unarmed -> nothing new (once per episode) ==
+  (exit 0)
+  wake queue:
+    1790112996	1	check	lavish-board-unarmed:wallets:c701e3c4be4b30602e46a99c58377e09	lavish board unarmed: task=wallets url=http://127.0.0.1:4387/session/883167476396edb4 file=/tmp/lavish-demo.ZxYHAX/boards/wallets-board.html unarmed_for=90s
+  episode records: 1
+
+== worker finally arms the board for real via bin/fm-procevent.sh register ==
+  registered source: lavish-97ee60c7ec47b917      lavish       none       0
+== scan 4: armed -> silent, episode record removed ==
+  (exit 0)
+  wake queue:
+    1790112996	1	check	lavish-board-unarmed:wallets:c701e3c4be4b30602e46a99c58377e09	lavish board unarmed: task=wallets url=http://127.0.0.1:4387/session/883167476396edb4 file=/tmp/lavish-demo.ZxYHAX/boards/wallets-board.html unarmed_for=90s
+  episode records: 0
+
+== the guard never touched the board: adapter calls seen ==
+  (adapter shim only answers 'sessions' and 'source-id'; any arm/poll/open/end would have exited 2 and failed the scan above)

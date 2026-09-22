@@ -1,0 +1,9 @@
+$ lavish-axi --version
+0.1.77
+
+$ bin/fm-procevent-lavish.sh sessions   # read-only, against the live server
+open	http://127.0.0.1:4387/session/24d3974cafa3912a	/Users/jackdille/code/atelier/projects/rts/evidence/packets/2026-09-22/page.html
+open	http://127.0.0.1:4387/session/bf974dd5cec3861c	/Users/jackdille/code/atelier/projects/rts/evidence/walkthroughs/2026-09-16-reversal-question/page.html
+open	http://127.0.0.1:4387/session/648a54b736900d1d	/Users/jackdille/code/firstmate/.lavish/balance-module-options.html
+open	http://127.0.0.1:4387/session/883167476396edb4	/Users/jackdille/code/firstmate/.lavish/wallets-board.html
+exit=0
