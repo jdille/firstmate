@@ -32,11 +32,10 @@
 # decides.
 #
 # THE GATES, all of which must hold before one wake is published.
-#   1. A board URL (http://<host>:<port>/session/<id>) appears in this home's
-#      state/<id>.status log, in a line that is either NOT terminal by
-#      bin/fm-classify-lib.sh's status_is_terminal_verb contract or is the
-#      log's last line. A URL whose only mentions are terminal lines the log
-#      has already moved past belongs to a finished phase.
+#   1. A board URL (http://<host>:<port>/session/<id>) appears in any line of
+#      this home's state/<id>.status log. Which mention it is does not matter:
+#      whether the board still needs attending is decided by gates 2 and 3, not
+#      by where the log has moved on to.
 #   2. The task is live: its recorded endpoint still exists, read through
 #      bin/fm-backend.sh's cheap read-only fm_backend_target_exists. A torn-down
 #      or dead task has no worker to steer, and a live listener writing into a
@@ -78,8 +77,6 @@ STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 
 # shellcheck source=bin/fm-wake-lib.sh
 . "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-classify-lib.sh
-. "$SCRIPT_DIR/fm-classify-lib.sh"
 # shellcheck source=bin/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
 # shellcheck source=bin/fm-timeout-lib.sh
@@ -129,22 +126,12 @@ record_value() {  # <record> <key>
   sed -n "s/^$2=//p" "$1" 2>/dev/null | head -1
 }
 
-# Board URLs a task's status log still stands behind. Gate 1 above owns the
+# Board URLs named anywhere in a task's status log. Gate 1 above owns the
 # rule; this is its only implementation.
 status_board_urls() {  # <status-file>
   local status=$1
   [ -f "$status" ] && [ ! -L "$status" ] || return 0
-  local line last=""
-  while IFS= read -r line || [ -n "$line" ]; do
-    last=$line
-  done < "$status"
-  while IFS= read -r line || [ -n "$line" ]; do
-    [ -n "$line" ] || continue
-    if status_is_terminal_verb "$line" && [ "$line" != "$last" ]; then
-      continue
-    fi
-    printf '%s\n' "$line" | grep -Eo 'https?://[A-Za-z0-9.:_-]+/session/[A-Za-z0-9_-]+' || true
-  done < "$status"
+  grep -Eo 'https?://[A-Za-z0-9.:_-]+/session/[A-Za-z0-9_-]+' "$status" || true
 }
 
 # Gate 2: the recorded endpoint still exists. An unreadable or absent endpoint

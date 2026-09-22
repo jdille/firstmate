@@ -249,17 +249,25 @@ test_dead_task_is_not_reported() {
   pass "fm-lavish-board-guard.sh: a dead task's board is never reported"
 }
 
-# A URL the log has already moved past, and a session the server no longer
-# lists as open, are both out of scope.
-test_superseded_and_closed_boards_are_skipped() {
-  make_world superseded
+# The board's only mention may be a terminal line the log has since moved
+# past. While the task is live and the board is open, that board is still
+# unarmed and still reported; a session the server no longer lists as open,
+# or does not list at all, is out of scope.
+test_moved_past_line_still_reports_and_closed_boards_are_skipped() {
+  make_world moved-past
   write_task alpha \
     "needs-decision [key=board-review]: review the board at $BOARD_URL" \
-    'working: captain answered, carrying on' \
-    'done: report written'
+    'working: waiting on the captain'
+  run_scan 60 >/dev/null || fail "the first moved-past scan failed"
+  [ "$(record_count)" = 1 ] || fail "a board named only in a moved-past line was not observed"
+  age_record 600
   local out
-  out=$(run_scan 60) || fail "scan failed on a superseded board line"
-  [ -z "$out" ] || fail "a superseded board line was reported: $out"
+  out=$(run_scan 60) || fail "the moved-past reporting scan failed"
+  case "$out" in
+    *"url=$BOARD_URL"*) ;;
+    *) fail "a live, open board named only in a moved-past line was not reported: $out" ;;
+  esac
+  [ "$(queued_board_wakes)" = 1 ] || fail "the moved-past board did not queue exactly one wake"
 
   make_world closed-session
   write_task alpha "needs-decision [key=board-review]: review the board at $BOARD_URL"
@@ -273,7 +281,7 @@ test_superseded_and_closed_boards_are_skipped() {
   write_task alpha "needs-decision [key=board-review]: review the board at $OTHER_URL"
   out=$(run_scan 60) || fail "scan failed on an unlisted session"
   [ -z "$out" ] || fail "a session the server does not list was reported: $out"
-  pass "fm-lavish-board-guard.sh: superseded, closed, and unlisted boards are skipped"
+  pass "fm-lavish-board-guard.sh: a moved-past board line still reports; closed and unlisted boards are skipped"
 }
 
 # Arming clears the record, and a board that loses its registration again rings
@@ -378,7 +386,7 @@ test_armed_board_is_silent
 test_unarmed_past_grace_reports_once
 test_second_cycle_does_not_duplicate
 test_dead_task_is_not_reported
-test_superseded_and_closed_boards_are_skipped
+test_moved_past_line_still_reports_and_closed_boards_are_skipped
 test_arming_clears_the_record_and_a_later_lapse_rings
 test_unreadable_evidence_refuses_rather_than_guessing
 test_sessions_absorbs_appended_columns_and_refuses_reordering

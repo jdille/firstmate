@@ -236,6 +236,9 @@ LAVISH_BOARD_INTERVAL=${FM_LAVISH_BOARD_INTERVAL:-60}  # seconds between board-a
 case "$HOME_SUMMARY_INTERVAL" in
   ''|*[!0-9]*|0) HOME_SUMMARY_INTERVAL=300 ;;
 esac
+case "$LAVISH_BOARD_INTERVAL" in
+  ''|*[!0-9]*|0) LAVISH_BOARD_INTERVAL=60 ;;
+esac
 SIGNAL_GRACE=${FM_SIGNAL_GRACE:-30}   # seconds to linger after a signal so trailing
                                       # signals (a status write, then the same turn's
                                       # turn-end hook) coalesce into one wake
