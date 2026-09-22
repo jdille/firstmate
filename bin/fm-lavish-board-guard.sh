@@ -57,8 +57,9 @@
 # the once-per-episode notified flag, so a board that stays unarmed produces
 # exactly one wake rather than one per watcher poll. The record is removed the
 # moment the board is armed, closes, or its task goes away, so a later lapse
-# rings again. FM_LAVISH_BOARD_GRACE_SECS overrides the default (300), bounded
-# to 60..3600.
+# rings again. FM_LAVISH_BOARD_GRACE_SECS overrides the default (300); it must
+# be a whole number from 60 to 3600, and any other value is refused with exit 2
+# rather than clamped, so a typo cannot silently shorten or stretch the grace.
 #
 # OUTPUT AND EXIT. One `actionable: <payload>` line per newly reported board on
 # stdout, nothing on a quiet scan. Exit 0 when the scan completed, 1 when it
